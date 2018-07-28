@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DirectoryParser.Models.FileModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,18 +9,17 @@ namespace DirectoryParser
 {
     public class StackBasedFileSearch
     {      
-        public static void TraverseTree(string root)
+        public static List<FileDescription> TraverseTree(string root)
         {
+            List<FileDescription> result = new List<FileDescription>();
             // Data structure to hold names of subfolders to be
             // examined for files.
             Stack<string> dirs = new Stack<string>(20);
-
             if (!System.IO.Directory.Exists(root))
             {
                 throw new ArgumentException();
             }
             dirs.Push(root);
-
             while (dirs.Count > 0)
             {
                 string currentDir = dirs.Pop();
@@ -47,20 +47,16 @@ namespace DirectoryParser
                     Console.WriteLine(e.Message);
                     continue;
                 }
-
                 string[] files = null;
                 try
                 {
                     files = System.IO.Directory.GetFiles(currentDir);
                 }
-
                 catch (UnauthorizedAccessException e)
                 {
-
                     Console.WriteLine(e.Message);
                     continue;
                 }
-
                 catch (System.IO.DirectoryNotFoundException e)
                 {
                     Console.WriteLine(e.Message);
@@ -74,7 +70,15 @@ namespace DirectoryParser
                     {
                         // Perform whatever action is required in your scenario.
                         System.IO.FileInfo fi = new System.IO.FileInfo(file);
-                        Console.WriteLine("{0}: {1}, {2}", fi.Name, fi.Length, fi.CreationTime);
+                        Console.WriteLine("{0}: {1}, {2}, {3}", currentDir, fi.Name, fi.Length, fi.CreationTime);
+                        FileDescription fileDescription = new FileDescription
+                        {
+                            DirectoryPath = currentDir,
+                            Filename = fi.Name,
+                            FileCreationTime = fi.CreationTime,
+                            SizeBytes = fi.Length
+                        };
+                        result.Add(fileDescription);
                     }
                     catch (System.IO.FileNotFoundException e)
                     {
@@ -85,12 +89,12 @@ namespace DirectoryParser
                         continue;
                     }
                 }
-
                 // Push the subdirectories onto the stack for traversal.
                 // This could also be done before handing the files.
                 foreach (string str in subDirs)
                     dirs.Push(str);
             }
+            return result;
         }
     }
 }

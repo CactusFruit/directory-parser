@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace DirectoryParser
     /// </summary>
     public class RecursiveFileSearch
     {        
-        public static void WalkDirectoryTree(System.IO.DirectoryInfo root)
+        public static void WalkDirectoryTree(System.IO.DirectoryInfo root, StringCollection log)
         {
             System.IO.FileInfo[] files = null;
             System.IO.DirectoryInfo[] subDirs = null;
@@ -54,7 +55,7 @@ namespace DirectoryParser
                 foreach (System.IO.DirectoryInfo dirInfo in subDirs)
                 {
                     // Resursive call for each subdirectory.
-                    WalkDirectoryTree(dirInfo);
+                    WalkDirectoryTree(dirInfo, log);
                 }
             }
         }

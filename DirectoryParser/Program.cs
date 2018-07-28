@@ -1,5 +1,9 @@
-﻿using System;
+﻿using CsvHelper;
+using DirectoryParser.Models.FileModels;
+using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,7 +31,7 @@ namespace DirectoryParser
                     continue;
                 }
                 System.IO.DirectoryInfo rootDir = di.RootDirectory;
-                RecursiveFileSearch.WalkDirectoryTree(rootDir);
+                RecursiveFileSearch.WalkDirectoryTree(rootDir, log);
             }
 
             // Write out all the files that could not be processed.
@@ -42,15 +46,40 @@ namespace DirectoryParser
         {
             // Specify the starting folder on the command line, or in 
             // Visual Studio in the Project > Properties > Debug pane.
-            StackBasedFileSearch.TraverseTree(args[0]);
+            List<FileDescription> listFileDescriptions = StackBasedFileSearch.TraverseTree(args[0]);
+            PrintResultsToCsv(listFileDescriptions);
+        }
+
+        static void PrintResultsToCsv (IEnumerable<Object> results)
+        {
+            String directoryForScanResults = ConfigurationManager.AppSettings["DirectoryToSaveResults"].ToString();
+            DateTime now = System.DateTime.Now;
+            using (StreamWriter textWriter = File.CreateText(directoryForScanResults + "\\ScanResults_" + now.ToString("yyyyMMdd-HHmmss") + ".csv"))
+            {
+                var csv = new CsvWriter(textWriter);
+                csv.WriteRecords(results);
+            }
         }
 
         static void Main(string[] args)
         {
-            // Kick off either recursive or stack-based directory navigation
-            RecursiveMain(new List<String>().ToArray());
-            StackBasedMain(new List<String>().ToArray());
+            String directoryToScan = "";
+            try
+            {
+                directoryToScan = ConfigurationManager.AppSettings["DirectoryToScan"].ToString();
+            }
+            catch (Exception e)
+            {
 
+            }
+            if (directoryToScan != "")
+            {
+                Console.WriteLine("Scanning directory: " + directoryToScan);
+                List<String> directoriesToProcess = new List<string> { directoryToScan };
+                // Kick off either recursive or stack-based directory navigation
+                //RecursiveMain(directoriesToProcess.ToArray());
+                StackBasedMain(directoriesToProcess.ToArray());
+            }
             // Keep the console window open in debug mode.
             Console.WriteLine("Press any key");
             Console.ReadKey();
